@@ -20,8 +20,7 @@ class Game
   def play
     while !game_over?
       board.render
-      pos, click = get_input
-      make_move(pos, click)
+      make_move(get_input)
     end
 
     board.render
@@ -34,21 +33,25 @@ class Game
 
   def get_position
     pos_str = nil
+
     until (pos = validate_position(pos_str))
       puts "Invalid input." if (pos == false && !pos_str.nil?)
       puts "Enter position, in form: row, column"
       print "> "
       pos_str = gets.chomp
     end
+
     pos
   end
 
   def get_click
     click = nil
+
     until valid_click?(click)
       print "(F)lag or (R)eveal?: "
       click = gets.chomp
     end
+    
     parse_click(click)
   end
 

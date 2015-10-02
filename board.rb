@@ -1,10 +1,15 @@
+require 'forwardable'
+
 class Board
-  DEFAULT_BOMB_PERCENT = 0.3
+  extend Forwardable
+  include Enumerable
+
   OFFSETS = (-1..1).to_a.repeated_permutation(2).to_a.delete_if { |a| a == [0, 0] }
 
   attr_reader :grid
+  def_delegators :@grid, :length, :each
 
-  def initialize(board_size = 9, bomb_percent = DEFAULT_BOMB_PERCENT)
+  def initialize(board_size, bomb_percent)
     @grid = []
     populate(board_size, bomb_percent)
   end
@@ -19,23 +24,21 @@ class Board
     @grid[x][y] = value
   end
 
-  def length
-    grid.length
-  end
-
   def populate(board_size, bomb_percent)
     @grid = (0...board_size).map do |row|
       (0...board_size).map do |col|
         rand < bomb_percent ? Square.new(true) : Square.new(false)
       end
     end
+
     set_values
   end
 
   def set_values
-    (0...grid.length).each do |row|
-      (0...grid.length).each do |col|
+    (0...length).each do |row|
+      (0...length).each do |col|
         pos = [row, col]
+
         if self[pos].bomb?
           self[pos].value = "B"
         else
@@ -74,12 +77,12 @@ class Board
   end
 
   def valid_pos?(pos)
-    pos.all? { |num| num.between?(0, grid.length - 1) }
+    pos.all? { |num| num.between?(0, length - 1) }
   end
 
   def to_s
-    " " + (0...grid.length).map(&:to_s).join(" ") + "\n" +
-    grid.map.with_index do |row, row_idx|
+    " " + (0...length).map(&:to_s).join(" ") + "\n" +
+    map.with_index do |row, row_idx|
       "#{row_idx}" + row.map(&:to_s).join(" ").colorize(background: Square::BACKGROUND_COLOR)
     end.join("\n")
   end
