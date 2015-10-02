@@ -1,6 +1,7 @@
 require_relative 'board.rb'
 require_relative 'square.rb'
 require 'colorize'
+require 'byebug'
 
 class Game
   DIFFICULTIES = (1..5).reduce({}) { |accum,level| accum.merge({level => (level * 0.05).round(2) }) }
@@ -20,7 +21,7 @@ class Game
   def play
     while !game_over?
       board.render
-      make_move(get_input)
+      make_move(*get_input)
     end
 
     board.render
@@ -110,6 +111,7 @@ class Game
   end
 
   def left_click(pos)
+    debugger
     return if board[pos].flagged?
 
     if board[pos].reveal!
