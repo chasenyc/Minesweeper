@@ -1,4 +1,5 @@
 require 'colorize'
+require 'byebug'
 
 class Square
   BACKGROUND_COLOR = :light_white
@@ -170,7 +171,7 @@ class Game
   def get_position
     pos_str = nil
     until (pos = validate_position(pos_str))
-      puts "Invalid input." if pos_str == false
+      puts "Invalid input." if (pos == false && !pos_str.nil?)
       puts "Enter position, in form: row, column"
       print "> "
       pos_str = gets.chomp
@@ -184,7 +185,18 @@ class Game
       print "(F)lag or (R)eveal?: "
       click = gets.chomp
     end
-    click
+    parse_click(click)
+  end
+
+  def parse_click(click)
+    case click.downcase
+    when "f"
+      "right"
+    when "r"
+      "left"
+    else
+      raise "Invalid click"
+    end
   end
 
   def valid_click?(click)
@@ -249,7 +261,7 @@ class Game
   end
 
   def all_positions
-    (0..9).to_a.repeated_permutation(2).to_a
+    (0...9).to_a.repeated_permutation(2).to_a
   end
 
   def all_non_bomb_positions
@@ -263,4 +275,10 @@ class Game
   def reveal_all_bombs!
     all_bomb_positions.each { |pos| board[pos].reveal! }
   end
+end
+
+
+if __FILE__ == $PROGRAM_NAME
+  game = Game.new
+  game.play
 end
