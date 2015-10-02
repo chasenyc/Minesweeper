@@ -45,6 +45,10 @@ class Square
     bomb
   end
 
+  def revealed?
+    !hidden
+  end
+
   def to_s
     if hidden
       flagged ? IMAGES["F"] : " "
@@ -142,8 +146,21 @@ class Game
     @game_over = false
   end
 
+  def play
+    while !game_over?
+      board.render
+      pos, click = get_input
+      make_move(pos, click)
+
+    end
+  end
+
   def game_over?
     @game_over
+  end
+
+  def won_game?
+    all_non_bomb_positions.all? { |pos| board[pos].revealed? }
   end
 
   def make_move(pos, click = 'left')
@@ -155,16 +172,24 @@ class Game
   end
 
   def left_click(pos)
-    game_over if board[pos].reveal!
+    lose_game if board[pos].reveal!
   end
 
-  def game_over
+  def lose_game
     @game_over = true
     reveal_all_bombs!
   end
 
+  def win_game
+    @game_over = true
+  end
+
   def all_positions
     (0..9).to_a.repeated_permutation(2).to_a
+  end
+
+  def all_non_bomb_positions
+    all_positions.reject { |pos| board[pos].bomb? }
   end
 
   def all_bomb_positions
