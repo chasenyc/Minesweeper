@@ -1,5 +1,5 @@
 class Square
-  attr_reader :bomb, :hidden, :flagged
+  attr_reader :bomb, :hidden, :flagged, :value
 
   def initialize(bomb = false)
     @bomb = bomb
@@ -14,6 +14,18 @@ class Square
   def reveal!
     @hidden = false
     bomb
+  end
+
+  def to_s
+    if hidden
+      flagged ? "F" : "?"
+    else
+      value.to_s
+    end
+  end
+
+  def set_value(value)
+    @value = value
   end
 
 end
@@ -32,6 +44,12 @@ class Board
         rand < bomb_percent ? Square.new(true) : Square.new(false)
       end
     end
-
   end
+
+  def to_s
+    p grid.map do |row|
+      row.map(&:to_s).join(" ")
+    end.join("\n")
+  end
+
 end
