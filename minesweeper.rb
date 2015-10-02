@@ -1,4 +1,32 @@
+require 'colorize'
+
 class Square
+  BACKGROUND_COLOR = :light_white
+
+  COLORS = {
+    '0' => BACKGROUND_COLOR,
+    '1' => :light_blue,
+    '2' => :green,
+    '3' => :light_red,
+    '4' => :blue,
+    '5' => :red,
+    '6' => :cyan,
+    '7' => :magenta,
+    '8' => :light_black,
+    'F' => :red,
+    'B' => :black
+  }
+
+  SPECIAL_CHARS = {
+    '0' => ' ',
+    'F' => "\u2691",
+    'B' => "\u2622",
+  }
+  IMAGES = (('0'..'9').to_a + ['F', 'B']).reduce({}) do |acc, letter|
+    str = SPECIAL_CHARS.has_key?(letter) ? SPECIAL_CHARS[letter] : letter
+    acc.merge({letter => str.colorize(COLORS[letter])})
+  end
+
   attr_reader :bomb, :hidden, :flagged, :value
   alias_method :bomb?, :bomb
 
@@ -19,9 +47,9 @@ class Square
 
   def to_s
     if hidden
-      flagged ? "F" : "?"
+      flagged ? IMAGES["F"] : " "
     else
-      value.to_s
+      IMAGES[value.to_s]
     end
   end
 
@@ -100,7 +128,7 @@ class Board
 
   def render
     system("clear")
-    puts to_s
+    puts to_s.colorize(background: Square::BACKGROUND_COLOR)
   end
 
 end
@@ -111,6 +139,40 @@ class Game
 
   def initialize(board_size = 9, difficulty = 5)
     @board = Board.new(board_size, DIFFICULTIES[difficulty])
+    @game_over = false
   end
-  
+
+  def game_over?
+    @game_over
+  end
+
+  def make_move(pos, click = 'left')
+    click == 'right' ? right_click(pos) : left_click(pos)
+  end
+
+  def right_click(pos)
+    board[pos].toggle_flag!
+  end
+
+  def left_click(pos)
+    game_over if board[pos].reveal!
+  end
+
+  def game_over
+    @game_over = true
+    reveal_all_bombs!
+  end
+
+  def all_positions
+    (0..9).to_a.repeated_permutation(2).to_a
+  end
+
+  def all_bomb_positions
+    all_positions.select { |pos| board[pos].bomb? }
+  end
+
+  def reveal_all_bombs!
+    all_bomb_positions.each { |pos| board[pos].reveal! }
+  end
+
 end
