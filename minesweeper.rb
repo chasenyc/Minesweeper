@@ -138,12 +138,15 @@ class Board
 end
 
 class Game
-  attr_reader :board
+  attr_reader :board, :win
+  alias_method :win?, :win
   DIFFICULTIES = (1..5).reduce({}) { |accum,level| accum.merge({level => (level * 0.1).round(2) }) }
+  POS_REGEXP = Regexp.new(/^\d,\s*\d$/)
 
   def initialize(board_size = 9, difficulty = 5)
     @board = Board.new(board_size, DIFFICULTIES[difficulty])
     @game_over = false
+    @win = false
   end
 
   def play
@@ -151,8 +154,19 @@ class Game
       board.render
       pos, click = get_input
       make_move(pos, click)
-
     end
+
+    puts game_over_message
+  end
+
+  def get_input
+    puts "Enter position, in form: row, column"
+    print "> "
+    pos_str = gets.chomp
+  end
+
+  def valid_pos_str?(pos_str)
+    !(pos_str =~ POS_REGEXP).nil?
   end
 
   def game_over?
@@ -161,6 +175,11 @@ class Game
 
   def won_game?
     all_non_bomb_positions.all? { |pos| board[pos].revealed? }
+  end
+
+  def game_over_message
+    return "" unless game_over?
+    win? ? "YOU WIN!!" : "TRY AGAIN"
   end
 
   def make_move(pos, click = 'left')
@@ -172,7 +191,11 @@ class Game
   end
 
   def left_click(pos)
-    lose_game if board[pos].reveal!
+    if board[pos].reveal!
+      lose_game
+    elsif won_game?
+      win_game
+    end
   end
 
   def lose_game
@@ -182,6 +205,7 @@ class Game
 
   def win_game
     @game_over = true
+    @win = true
   end
 
   def all_positions
