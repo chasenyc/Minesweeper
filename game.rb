@@ -3,7 +3,7 @@ require_relative 'square.rb'
 require 'colorize'
 
 class Game
-  DIFFICULTIES = (1..5).reduce({}) { |accum,level| accum.merge({level => (level * 0.1).round(2) }) }
+  DIFFICULTIES = (1..5).reduce({}) { |accum,level| accum.merge({level => (level * 0.05).round(2) }) }
   DEFAULT_DIFFICULTY = 2
   DEFAULT_BOARD_SIZE = 9
   POS_REGEXP = Regexp.new(/^\d,\s*\d$/)

@@ -37,9 +37,9 @@ class Board
       (0...grid.length).each do |col|
         pos = [row, col]
         if self[pos].bomb?
-          self[pos].set_value("B")
+          self[pos].value = "B"
         else
-          self[pos].set_value(neighbor_bomb_count(pos))
+          self[pos].value = neighbor_bomb_count(pos)
         end
       end
     end

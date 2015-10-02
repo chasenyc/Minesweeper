@@ -28,7 +28,8 @@ class Square
     acc.merge({letter => str.colorize(COLORS[letter])})
   end
 
-  attr_reader :bomb, :hidden, :flagged, :value
+  attr_accessor :value
+  attr_reader :bomb, :hidden, :flagged
   alias_method :bomb?, :bomb
   alias_method :hidden?, :hidden
   alias_method :flagged?, :flagged
@@ -53,14 +54,10 @@ class Square
   end
 
   def to_s
-    if hidden
+    if hidden?
       flagged ? IMAGES["F"] : " "
     else
       IMAGES[value.to_s]
     end
-  end
-
-  def set_value(value)
-    @value = value
   end
 end
