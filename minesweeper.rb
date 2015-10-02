@@ -84,6 +84,10 @@ class Board
     @grid[x][y] = value
   end
 
+  def length
+    grid.length
+  end
+
   def populate(board_size, bomb_percent)
     @grid = (0...board_size).map do |row|
       (0...board_size).map do |col|
@@ -160,13 +164,49 @@ class Game
   end
 
   def get_input
-    puts "Enter position, in form: row, column"
-    print "> "
-    pos_str = gets.chomp
+    [get_position, get_click]
+  end
+
+  def get_position
+    pos_str = nil
+    until (pos = validate_position(pos_str))
+      puts "Invalid input." if pos_str == false
+      puts "Enter position, in form: row, column"
+      print "> "
+      pos_str = gets.chomp
+    end
+    pos
+  end
+
+  def get_click
+    click = nil
+    until valid_click?(click)
+      print "(F)lag or (R)eveal?: "
+      click = gets.chomp
+    end
+    click
+  end
+
+  def valid_click?(click)
+    click == "F" || click == "f" || click == "R" || click == "r"
+  end
+
+  def validate_position(pos_str)
+    return false unless valid_pos_str?(pos_str)
+    pos = parse_pos(pos_str)
+    in_bounds?(pos) ? pos : false
   end
 
   def valid_pos_str?(pos_str)
-    !(pos_str =~ POS_REGEXP).nil?
+    pos_str.is_a?(String) && !(pos_str =~ POS_REGEXP).nil?
+  end
+
+  def in_bounds?(pos)
+    pos.all? { |num| num.between?(0, board.length - 1) }
+  end
+
+  def parse_pos(pos_str)
+    pos_str.split(",").map(&:strip).map(&:to_i)
   end
 
   def game_over?
@@ -223,5 +263,4 @@ class Game
   def reveal_all_bombs!
     all_bomb_positions.each { |pos| board[pos].reveal! }
   end
-
 end
