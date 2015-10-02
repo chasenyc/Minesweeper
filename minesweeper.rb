@@ -39,6 +39,16 @@ class Board
     @grid = []
   end
 
+  def [](pos)
+    x, y = pos
+    grid[x][y]
+  end
+
+  def []=(pos, value)
+    x, y = pos
+    @grid[x][y] = value
+  end
+
   def populate(board_size = 9, bomb_percent = DEFAULT_BOMB_PERCENT)
     @grid = (0...board_size).map do |row|
       (0...board_size).map do |col|
@@ -48,15 +58,15 @@ class Board
   end
 
   def set_values
-    grid.each do |row|
-      row.each do |square|
-
+    (0...grid.length).each do |row|
+      (0...grid.length).each do |col|
+        num_bombs = get_neighbors([])
       end
     end
   end
 
   def get_neighbors(pos)
-    OFFSETS.map { |offset| add_squares(offset, pos) }
+    OFFSETS.map { |offset| add_squares(offset, pos) }.select { |square| valid_pos?(square) }
   end
 
   def add_squares(square1, square2)
