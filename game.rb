@@ -51,7 +51,7 @@ class Game
       print "(F)lag or (R)eveal?: "
       click = gets.chomp
     end
-    
+
     parse_click(click)
   end
 
