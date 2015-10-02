@@ -33,6 +33,7 @@ end
 class Board
   attr_reader :grid
   DEFAULT_BOMB_PERCENT = 0.3
+  OFFSETS = (-1..1).to_a.repeated_permutation(2).to_a.delete_if { |a| a == [0, 0] }
 
   def initialize()
     @grid = []
@@ -44,6 +45,26 @@ class Board
         rand < bomb_percent ? Square.new(true) : Square.new(false)
       end
     end
+  end
+
+  def set_values
+    grid.each do |row|
+      row.each do |square|
+
+      end
+    end
+  end
+
+  def get_neighbors(pos)
+    OFFSETS.map { |offset| add_squares(offset, pos) }
+  end
+
+  def add_squares(square1, square2)
+    [square1.first + square2.first, square1.last + square2.last]
+  end
+
+  def valid_pos?(pos)
+    pos.all? { |num| num.between?(0, grid.length - 1) }
   end
 
   def to_s
