@@ -1,6 +1,7 @@
 require_relative 'board.rb'
 require_relative 'square.rb'
 require 'colorize'
+require 'yaml'
 require 'byebug'
 
 class Game
@@ -11,6 +12,16 @@ class Game
 
   attr_reader :board, :win
   alias_method :win?, :win
+
+  def self.load(filename)
+    YAML::load(File.read(filename))
+  end
+
+  def save(filename)
+    File.open(filename, 'w') do |f|
+      f.write(self.to_yaml)
+    end
+  end
 
   def initialize(board_size = DEFAULT_BOARD_SIZE, difficulty = DEFAULT_DIFFICULTY)
     @board = Board.new(board_size, DIFFICULTIES[difficulty])
@@ -111,7 +122,6 @@ class Game
   end
 
   def left_click(pos)
-    debugger
     return if board[pos].flagged?
 
     if board[pos].reveal!
@@ -154,6 +164,14 @@ end
 
 
 if __FILE__ == $PROGRAM_NAME
-  game = Game.new
-  game.play
+  puts "(N)ew game, or (L)oad game: "
+  choice = gets.chomp.downcase
+  return unless (choice == "n" || choice == "l")
+
+  if choice == "n"
+    Game.new.play
+  else
+    puts "File name: "
+    Game.load(gets.chomp).play
+  end
 end
