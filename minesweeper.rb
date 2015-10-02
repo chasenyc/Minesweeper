@@ -5,7 +5,7 @@ class Square
   BACKGROUND_COLOR = :light_white
 
   COLORS = {
-    '0' => BACKGROUND_COLOR,
+    '0' => :white,
     '1' => :light_blue,
     '2' => :green,
     '3' => :light_red,
@@ -19,10 +19,11 @@ class Square
   }
 
   SPECIAL_CHARS = {
-    '0' => ' ',
+    '0' => "\u25fd",
     'F' => "\u2691",
     'B' => "\u2622",
   }
+
   IMAGES = (('0'..'9').to_a + ['F', 'B']).reduce({}) do |acc, letter|
     str = SPECIAL_CHARS.has_key?(letter) ? SPECIAL_CHARS[letter] : letter
     acc.merge({letter => str.colorize(COLORS[letter])})
@@ -30,6 +31,8 @@ class Square
 
   attr_reader :bomb, :hidden, :flagged, :value
   alias_method :bomb?, :bomb
+  alias_method :hidden?, :hidden
+  alias_method :flagged?, :flagged
 
   def initialize(bomb = false)
     @bomb = bomb
@@ -61,14 +64,13 @@ class Square
   def set_value(value)
     @value = value
   end
-
-
 end
 
 class Board
-  attr_reader :grid
   DEFAULT_BOMB_PERCENT = 0.3
   OFFSETS = (-1..1).to_a.repeated_permutation(2).to_a.delete_if { |a| a == [0, 0] }
+
+  attr_reader :grid
 
   def initialize(board_size = 9, bomb_percent = DEFAULT_BOMB_PERCENT)
     @grid = []
@@ -116,9 +118,23 @@ class Board
   end
 
   def get_neighbors(pos)
-    OFFSETS.map do |offset|
-      add_squares(offset, pos)
-    end.select { |square| valid_pos?(square) }.map { |pos| self[pos] }
+    get_neighboring_positions(pos).map { |pos| self[pos] }
+  end
+
+  def get_neighboring_positions(pos)
+    OFFSETS.map { |offset| add_squares(offset, pos) }.select { |pos| valid_pos?(pos) }
+  end
+
+  def hidden_neighboring_positions(pos)
+    get_neighboring_positions(pos).select { |pos| self[pos].hidden? }
+  end
+
+  def explode_pos!(pos)
+    hidden_neighboring_positions(pos).each do |neighbor_pos|
+      next if self[neighbor_pos].flagged?
+      self[neighbor_pos].reveal!
+      explode_pos!(neighbor_pos) if self[neighbor_pos].value == 0
+    end
   end
 
   def add_squares(square1, square2)
@@ -130,25 +146,26 @@ class Board
   end
 
   def to_s
-    grid.map do |row|
-      row.map(&:to_s).join(" ")
+    " " + (0...grid.length).map(&:to_s).join(" ") + "\n" +
+    grid.map.with_index do |row, row_idx|
+      "#{row_idx}" + row.map(&:to_s).join(" ").colorize(background: Square::BACKGROUND_COLOR)
     end.join("\n")
   end
 
   def render
     system("clear")
-    puts to_s.colorize(background: Square::BACKGROUND_COLOR)
+    puts to_s
   end
-
 end
 
 class Game
-  attr_reader :board, :win
-  alias_method :win?, :win
   DIFFICULTIES = (1..5).reduce({}) { |accum,level| accum.merge({level => (level * 0.1).round(2) }) }
   POS_REGEXP = Regexp.new(/^\d,\s*\d$/)
 
-  def initialize(board_size = 9, difficulty = 5)
+  attr_reader :board, :win
+  alias_method :win?, :win
+
+  def initialize(board_size = 9, difficulty = 1)
     @board = Board.new(board_size, DIFFICULTIES[difficulty])
     @game_over = false
     @win = false
@@ -161,6 +178,7 @@ class Game
       make_move(pos, click)
     end
 
+    board.render
     puts game_over_message
   end
 
@@ -226,7 +244,7 @@ class Game
   end
 
   def won_game?
-    all_non_bomb_positions.all? { |pos| board[pos].revealed? }
+    all_non_bomb_positions.all? { |pos| board[pos].revealed? } && !game_over?
   end
 
   def game_over_message
@@ -243,9 +261,15 @@ class Game
   end
 
   def left_click(pos)
+    return if board[pos].flagged?
+
     if board[pos].reveal!
       lose_game
-    elsif won_game?
+    elsif board[pos].value == 0
+      board.explode_pos!(pos)
+    end
+
+    if won_game?
       win_game
     end
   end
